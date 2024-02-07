@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
+import authRoutes from "./routes/auth.routes.js";
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(helmet());
 app.use(compression());
 
 app.use(express.json());
+app.use("/api/auth", authRoutes);
 
 app.use(express.urlencoded({ extended: true }));
 
