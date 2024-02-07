@@ -91,3 +91,15 @@ export const getProfile = async (req, res) => {
     data: req.user,
   });
 };
+
+export const adminDashboard = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Welcome Admin",
+    data: {
+      totalUsers: 1,
+      totalCustomers: 0,
+      totalDeals: 0,
+    },
+  });
+};
