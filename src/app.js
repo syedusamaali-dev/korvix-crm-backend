@@ -5,7 +5,7 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import authRoutes from "./routes/auth.routes.js";
-
+import customerRoutes from "./routes/customer.routes.js";
 const app = express();
 
 app.use(cors());
@@ -16,6 +16,7 @@ app.use(compression());
 
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/customers", customerRoutes);
 
 app.use(express.urlencoded({ extended: true }));
 
