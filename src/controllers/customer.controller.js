@@ -126,3 +126,36 @@ export const getCustomers = async (req, res) => {
     });
   }
 };
+
+export const getCustomerById = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+
+    if (!customer || customer.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      customer.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: customer,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
