@@ -1,5 +1,5 @@
 import express from "express";
-import { createCustomer } from "../controllers/customer.controller.js";
+import { createCustomer , getCustomers} from "../controllers/customer.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 import { createCustomerValidation } from "../validators/customer.validation.js";
 
@@ -11,5 +11,6 @@ router.post(
   createCustomerValidation,
   createCustomer
 );
+router.get("/", protect, getCustomers);
 
 export default router;
