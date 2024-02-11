@@ -40,3 +40,51 @@ export const createCompany = async (req, res) => {
     });
   }
 };
+
+export const getCompanies = async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const search = req.query.search || "";
+
+    const filter = {
+      isDeleted: false,
+      owner: req.user._id,
+    };
+
+    if (search) {
+      filter.$or = [
+        { companyName: { $regex: search, $options: "i" } },
+        { companyCode: { $regex: search, $options: "i" } },
+        { industry: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (req.user.role === "admin") {
+      delete filter.owner;
+    }
+
+    const companies = await Company.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Company.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      data: companies,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
