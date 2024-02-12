@@ -88,3 +88,36 @@ export const getCompanies = async (req, res) => {
     });
   }
 };
+
+export const getCompanyById = async (req, res) => {
+  try {
+    const company = await Company.findById(req.params.id);
+
+    if (!company || company.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Company not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      company.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: company,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
