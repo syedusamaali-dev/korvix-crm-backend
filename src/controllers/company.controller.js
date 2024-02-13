@@ -121,3 +121,59 @@ export const getCompanyById = async (req, res) => {
     });
   }
 };
+
+export const updateCompany = async (req, res) => {
+  try {
+    const company = await Company.findById(req.params.id);
+
+    if (!company || company.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Company not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      company.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    if (
+      req.body.companyName &&
+      req.body.companyName !== company.companyName
+    ) {
+      const exists = await Company.findOne({
+        companyName: req.body.companyName,
+        isDeleted: false,
+      });
+
+      if (exists) {
+        return res.status(400).json({
+          success: false,
+          message: "Company already exists.",
+        });
+      }
+    }
+
+    Object.assign(company, req.body);
+
+    await company.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Company updated successfully.",
+      data: company,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
