@@ -52,3 +52,52 @@ export const createContact = async (req, res) => {
     });
   }
 };
+
+export const getContacts = async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const search = req.query.search || "";
+
+    const filter = {
+      isDeleted: false,
+      owner: req.user._id,
+    };
+
+    if (search) {
+      filter.$or = [
+        { firstName: { $regex: search, $options: "i" } },
+        { lastName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (req.user.role === "admin") {
+      delete filter.owner;
+    }
+
+    const contacts = await Contact.find(filter)
+      .populate("company", "companyCode companyName industry")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Contact.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      data: contacts,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
