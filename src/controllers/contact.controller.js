@@ -101,3 +101,38 @@ export const getContacts = async (req, res) => {
     });
   }
 };
+
+export const getContactById = async (req, res) => {
+  try {
+    const contact = await Contact.findById(req.params.id)
+      .populate("company", "companyCode companyName industry");
+
+    if (!contact || contact.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Contact not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      contact.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: contact,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
