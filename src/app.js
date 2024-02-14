@@ -7,6 +7,7 @@ import morgan from 'morgan';
 import authRoutes from "./routes/auth.routes.js";
 import customerRoutes from "./routes/customer.routes.js";
 import companyRoutes from "./routes/company.routes.js";
+import contactRoutes from "./routes/contact.routes.js";
 const app = express();
 
 app.use(cors());
@@ -19,7 +20,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/companies", companyRoutes);
-
+app.use("/api/contacts", contactRoutes);
 
 app.use(express.urlencoded({ extended: true }));
 
