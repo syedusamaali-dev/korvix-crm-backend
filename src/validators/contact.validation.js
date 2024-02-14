@@ -20,3 +20,18 @@ export const createContactValidation = [
     .notEmpty()
     .withMessage("Company is required."),
 ];
+
+
+export const updateContactValidation = [
+  body("firstName").optional().trim(),
+
+  body("lastName").optional().trim(),
+
+  body("email")
+    .optional()
+    .isEmail()
+    .withMessage("Valid email is required.")
+    .normalizeEmail(),
+
+  body("company").optional(),
+];

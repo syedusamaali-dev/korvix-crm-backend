@@ -136,3 +136,91 @@ export const getContactById = async (req, res) => {
     });
   }
 };
+
+export const updateContact = async (req, res) => {
+  try {
+    const contact = await Contact.findById(req.params.id);
+
+    if (!contact || contact.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Contact not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      contact.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    if (req.body.company) {
+      const company = await Company.findById(req.body.company);
+
+      if (!company || company.isDeleted) {
+        return res.status(404).json({
+          success: false,
+          message: "Company not found.",
+        });
+      }
+    }
+
+    Object.assign(contact, req.body);
+
+    await contact.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Contact updated successfully.",
+      data: contact,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const deleteContact = async (req, res) => {
+  try {
+    const contact = await Contact.findById(req.params.id);
+
+    if (!contact || contact.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Contact not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      contact.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    contact.isDeleted = true;
+
+    await contact.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Contact deleted successfully.",
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
