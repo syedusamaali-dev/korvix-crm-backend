@@ -62,3 +62,52 @@ export const createLead = async (req, res) => {
     });
   }
 };
+
+export const getLeads = async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const search = req.query.search || "";
+
+    const filter = {
+      isDeleted: false,
+      owner: req.user._id,
+    };
+
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { leadCode: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (req.user.role === "admin") {
+      delete filter.owner;
+    }
+
+    const leads = await Lead.find(filter)
+      .populate("company", "companyCode companyName industry")
+      .populate("contact", "contactCode firstName lastName email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Lead.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      data: leads,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
