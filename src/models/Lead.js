@@ -88,3 +88,31 @@ const leadSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+leadSchema.pre("save", async function () {
+  if (!this.isNew) return;
+
+  const lastLead = await mongoose
+    .model("Lead")
+    .findOne()
+    .sort({ createdAt: -1 });
+
+  let nextNumber = 1;
+
+  if (lastLead?.leadCode) {
+    const lastNumber = parseInt(
+      lastLead.leadCode.replace("LEAD-", ""),
+      10
+    );
+
+    if (!isNaN(lastNumber)) {
+      nextNumber = lastNumber + 1;
+    }
+  }
+
+  this.leadCode = `LEAD-${String(nextNumber).padStart(6, "0")}`;
+});
+
+const Lead = mongoose.model("Lead", leadSchema);
+
+export default Lead;
