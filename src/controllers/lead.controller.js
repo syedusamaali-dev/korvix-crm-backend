@@ -147,3 +147,111 @@ export const getLeadById = async (req, res) => {
     });
   }
 };
+
+export const updateLead = async (req, res) => {
+  try {
+    const lead = await Lead.findById(req.params.id);
+
+    if (!lead || lead.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Lead not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      lead.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    if (req.body.company) {
+      const company = await Company.findById(req.body.company);
+
+      if (!company || company.isDeleted) {
+        return res.status(404).json({
+          success: false,
+          message: "Company not found.",
+        });
+      }
+    }
+
+    if (req.body.contact) {
+      const contact = await Contact.findById(req.body.contact);
+
+      if (!contact || contact.isDeleted) {
+        return res.status(404).json({
+          success: false,
+          message: "Contact not found.",
+        });
+      }
+
+      const companyId = req.body.company || lead.company;
+
+      if (contact.company.toString() !== companyId.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: "Contact does not belong to the selected company.",
+        });
+      }
+    }
+
+    Object.assign(lead, req.body);
+
+    await lead.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Lead updated successfully.",
+      data: lead,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const deleteLead = async (req, res) => {
+  try {
+    const lead = await Lead.findById(req.params.id);
+
+    if (!lead || lead.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Lead not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      lead.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    lead.isDeleted = true;
+
+    await lead.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Lead deleted successfully.",
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
