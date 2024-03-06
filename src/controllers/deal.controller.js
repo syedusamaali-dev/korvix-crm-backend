@@ -1,1 +1,83 @@
+import Deal from "../models/Deal.js";
+import Lead from "../models/Lead.js";
+import Company from "../models/Company.js";
+import Contact from "../models/Contact.js";
 
+import { validationResult } from "express-validator";
+
+export const createDeal = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array(),
+      });
+    }
+
+    // Check Lead
+    const lead = await Lead.findById(req.body.lead);
+
+    if (!lead || lead.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Lead not found.",
+      });
+    }
+
+    // Business Rule
+    if (lead.status !== "won") {
+      return res.status(400).json({
+        success: false,
+        message: "Only Won leads can be converted into deals.",
+      });
+    }
+
+    // Check Company
+    const company = await Company.findById(req.body.company);
+
+    if (!company || company.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Company not found.",
+      });
+    }
+
+    // Check Contact
+    if (req.body.contact) {
+      const contact = await Contact.findById(req.body.contact);
+
+      if (!contact || contact.isDeleted) {
+        return res.status(404).json({
+          success: false,
+          message: "Contact not found.",
+        });
+      }
+
+      if (contact.company.toString() !== company._id.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: "Contact does not belong to this company.",
+        });
+      }
+    }
+
+    const deal = await Deal.create({
+      ...req.body,
+      owner: req.user._id,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Deal created successfully.",
+      data: deal,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

@@ -59,9 +59,14 @@ const dealSchema = new mongoose.Schema(
       default: 0,
     },
 
-    expectedCloseDate: Date,
+    expectedCloseDate: {
+      type: Date,
+    },
 
-    notes: String,
+    notes: {
+      type: String,
+      trim: true,
+    },
 
     isDeleted: {
       type: Boolean,
@@ -73,3 +78,30 @@ const dealSchema = new mongoose.Schema(
   }
 );
 
+dealSchema.pre("save", async function () {
+  if (!this.isNew) return;
+
+  const lastDeal = await mongoose
+    .model("Deal")
+    .findOne()
+    .sort({ createdAt: -1 });
+
+  let nextNumber = 1;
+
+  if (lastDeal?.dealCode) {
+    const lastNumber = parseInt(
+      lastDeal.dealCode.replace("DEAL-", ""),
+      10
+    );
+
+    if (!isNaN(lastNumber)) {
+      nextNumber = lastNumber + 1;
+    }
+  }
+
+  this.dealCode = `DEAL-${String(nextNumber).padStart(6, "0")}`;
+});
+
+const Deal = mongoose.model("Deal", dealSchema);
+
+export default Deal;
