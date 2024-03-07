@@ -48,14 +48,7 @@ const leadSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "new",
-        "qualified",
-        "proposal",
-        "negotiation",
-        "won",
-        "lost",
-      ],
+      enum: ["new", "qualified", "proposal", "negotiation", "won", "lost"],
       default: "new",
     },
 
@@ -83,10 +76,23 @@ const leadSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    converted: {
+      type: Boolean,
+      default: false,
+    },
+
+    convertedAt: {
+      type: Date,
+    },
+
+    deal: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Deal",
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 leadSchema.pre("save", async function () {
@@ -100,10 +106,7 @@ leadSchema.pre("save", async function () {
   let nextNumber = 1;
 
   if (lastLead?.leadCode) {
-    const lastNumber = parseInt(
-      lastLead.leadCode.replace("LEAD-", ""),
-      10
-    );
+    const lastNumber = parseInt(lastLead.leadCode.replace("LEAD-", ""), 10);
 
     if (!isNaN(lastNumber)) {
       nextNumber = lastNumber + 1;
