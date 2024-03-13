@@ -177,3 +177,113 @@ export const getDealById = async (req, res) => {
     });
   }
 };
+
+export const updateDeal = async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+
+    if (!deal || deal.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Deal not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      deal.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    // Validate Company
+    if (req.body.company) {
+      const company = await Company.findById(req.body.company);
+
+      if (!company || company.isDeleted) {
+        return res.status(404).json({
+          success: false,
+          message: "Company not found.",
+        });
+      }
+    }
+
+    // Validate Contact
+    if (req.body.contact) {
+      const contact = await Contact.findById(req.body.contact);
+
+      if (!contact || contact.isDeleted) {
+        return res.status(404).json({
+          success: false,
+          message: "Contact not found.",
+        });
+      }
+
+      const companyId = req.body.company || deal.company;
+
+      if (contact.company.toString() !== companyId.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: "Contact does not belong to the selected company.",
+        });
+      }
+    }
+
+    Object.assign(deal, req.body);
+
+    await deal.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Deal updated successfully.",
+      data: deal,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const deleteDeal = async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+
+    if (!deal || deal.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Deal not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      deal.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    deal.isDeleted = true;
+
+    await deal.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Deal deleted successfully.",
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
