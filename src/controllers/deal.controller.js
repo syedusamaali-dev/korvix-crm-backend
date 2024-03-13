@@ -140,3 +140,40 @@ export const getDeals = async (req, res) => {
     });
   }
 };
+
+export const getDealById = async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id)
+      .populate("lead", "leadCode title status")
+      .populate("company", "companyCode companyName industry")
+      .populate("contact", "contactCode firstName lastName email")
+      .populate("owner", "firstName lastName email");
+
+    if (!deal || deal.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Deal not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      deal.owner._id.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: deal,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
