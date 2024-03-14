@@ -241,7 +241,6 @@ export const updateDeal = async (req, res) => {
       message: "Deal updated successfully.",
       data: deal,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -279,7 +278,6 @@ export const deleteDeal = async (req, res) => {
       success: true,
       message: "Deal deleted successfully.",
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
