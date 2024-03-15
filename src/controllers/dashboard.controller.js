@@ -140,3 +140,48 @@ export const getDashboardOverview = async (req, res) => {
     });
   }
 };
+
+export const getLeadsByStatus = async (req, res) => {
+  try {
+
+    const filter =
+      req.user.role === "admin"
+        ? {
+            isDeleted: false,
+          }
+        : {
+            owner: req.user._id,
+            isDeleted: false,
+          };
+
+    const result = await Lead.aggregate([
+      {
+        $match: filter,
+      },
+      {
+        $group: {
+          _id: "$status",
+          total: {
+            $sum: 1,
+          },
+        },
+      },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
