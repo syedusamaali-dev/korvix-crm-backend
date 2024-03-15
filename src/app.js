@@ -11,6 +11,7 @@ import contactRoutes from "./routes/contact.routes.js";
 import leadRoutes from "./routes/lead.routes.js";
 
 import dealRoutes from "./routes/deal.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 const app = express();
 
 app.use(cors());
@@ -26,6 +27,9 @@ app.use("/api/companies", companyRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/deals", dealRoutes);
+
+app.use("/api/dashboard", dashboardRoutes);
+
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cookieParser());
