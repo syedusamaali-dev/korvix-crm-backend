@@ -185,3 +185,52 @@ export const getLeadsByStatus = async (req, res) => {
     });
   }
 };
+
+export const getDealsByStage = async (req, res) => {
+  try {
+    const filter =
+      req.user.role === "admin"
+        ? { isDeleted: false }
+        : {
+            owner: req.user._id,
+            isDeleted: false,
+          };
+
+    const result = await Deal.aggregate([
+      {
+        $match: filter,
+      },
+      {
+        $group: {
+          _id: "$stage",
+          total: {
+            $sum: 1,
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          stage: "$_id",
+          total: 1,
+        },
+      },
+      {
+        $sort: {
+          stage: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
