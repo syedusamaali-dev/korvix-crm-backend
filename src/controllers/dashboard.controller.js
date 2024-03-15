@@ -38,7 +38,6 @@ export const getDashboardOverview = async (req, res) => {
         totalDeals,
       },
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -46,3 +45,39 @@ export const getDashboardOverview = async (req, res) => {
     });
   }
 };
+
+const pipelineResult = await Deal.aggregate([
+  {
+    $match:
+      req.user.role === "admin"
+        ? { isDeleted: false }
+        : {
+            owner: req.user._id,
+            isDeleted: false,
+          },
+  },
+
+  {
+    $group: {
+      _id: null,
+      totalPipelineValue: {
+        $sum: "$value",
+      },
+    },
+  },
+]);
+
+const pipelineValue =
+  pipelineResult.length > 0 ? pipelineResult[0].totalPipelineValue : 0;
+
+res.status(200).json({
+  success: true,
+  data: {
+    totalCustomers,
+    totalCompanies,
+    totalContacts,
+    totalLeads,
+    totalDeals,
+    pipelineValue,
+  },
+});
