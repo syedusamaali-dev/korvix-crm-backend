@@ -50,9 +50,7 @@ export const getDashboardOverview = async (req, res) => {
     ]);
 
     const pipelineValue =
-      pipelineResult.length > 0
-        ? pipelineResult[0].totalPipelineValue
-        : 0;
+      pipelineResult.length > 0 ? pipelineResult[0].totalPipelineValue : 0;
 
     // Won Revenue
     const wonRevenueResult = await Deal.aggregate([
@@ -80,8 +78,42 @@ export const getDashboardOverview = async (req, res) => {
     ]);
 
     const wonRevenue =
-      wonRevenueResult.length > 0
-        ? wonRevenueResult[0].totalWonRevenue
+      wonRevenueResult.length > 0 ? wonRevenueResult[0].totalWonRevenue : 0;
+
+    const averageDealResult = await Deal.aggregate([
+      {
+        $match:
+          req.user.role === "admin"
+            ? {
+                isDeleted: false,
+              }
+            : {
+                owner: req.user._id,
+                isDeleted: false,
+              },
+      },
+      {
+        $group: {
+          _id: null,
+          averageDealSize: {
+            $avg: "$value",
+          },
+        },
+      },
+    ]);
+
+    const averageDealSize =
+      averageDealResult.length > 0 ? averageDealResult[0].averageDealSize : 0;
+
+    const convertedLeads = await Lead.countDocuments({
+      ...(req.user.role === "admin" ? {} : { owner: req.user._id }),
+      isDeleted: false,
+      converted: true,
+    });
+
+    const conversionRate =
+      totalLeads > 0
+        ? Number(((convertedLeads / totalLeads) * 100).toFixed(2))
         : 0;
 
     res.status(200).json({
@@ -92,11 +124,15 @@ export const getDashboardOverview = async (req, res) => {
         totalContacts,
         totalLeads,
         totalDeals,
+
         pipelineValue,
         wonRevenue,
+        averageDealSize,
+
+        convertedLeads,
+        conversionRate,
       },
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
