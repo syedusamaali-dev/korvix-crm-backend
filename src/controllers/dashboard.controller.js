@@ -234,3 +234,62 @@ export const getDealsByStage = async (req, res) => {
     });
   }
 };
+
+export const getMonthlyRevenue = async (req, res) => {
+  try {
+
+    const filter =
+      req.user.role === "admin"
+        ? {
+            isDeleted: false,
+            stage: "closed-won",
+          }
+        : {
+            owner: req.user._id,
+            isDeleted: false,
+            stage: "closed-won",
+          };
+
+    const result = await Deal.aggregate([
+      {
+        $match: filter,
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m",
+              date: "$createdAt",
+            },
+          },
+          revenue: {
+            $sum: "$value",
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          month: "$_id",
+          revenue: 1,
+        },
+      },
+      {
+        $sort: {
+          month: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
