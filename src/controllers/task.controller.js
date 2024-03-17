@@ -4,9 +4,11 @@ import Lead from "../models/Lead.js";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
 import Deal from "../models/Deal.js";
+import { logActivity } from "../utils/activityLogger.js";
 
 import {
-  createTaskValidation, updateTaskValidation
+  createTaskValidation,
+  updateTaskValidation,
 } from "../validators/task.validation.js";
 
 export const createTask = async (req, res) => {
@@ -117,13 +119,19 @@ export const createTask = async (req, res) => {
       .populate("company", "companyName companyCode")
       .populate("contact", "firstName lastName contactCode")
       .populate("deal", "title dealCode");
-
+    await logActivity({
+      action: "CREATE",
+      module: "task",
+      entityId: task._id,
+      entityCode: task.taskCode,
+      performedBy: req.user._id,
+      description: `Task ${task.title} created`,
+    });
     return res.status(201).json({
       success: true,
       message: "Task created successfully.",
       data: populatedTask,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -193,7 +201,6 @@ export const getTasks = async (req, res) => {
       pages: Math.ceil(total / limit),
       data: tasks,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -236,14 +243,11 @@ export const getTaskById = async (req, res) => {
       success: true,
       data: task,
     });
-
   } catch (error) {
-
     return res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 
@@ -281,14 +285,7 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    const {
-      assignedTo,
-      lead,
-      company,
-      contact,
-      deal,
-      status,
-    } = req.body;
+    const { assignedTo, lead, company, contact, deal, status } = req.body;
 
     // Validate Assigned User
     if (assignedTo) {
@@ -373,7 +370,6 @@ export const updateTask = async (req, res) => {
       message: "Task updated successfully.",
       data: updatedTask,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -415,20 +411,16 @@ export const deleteTask = async (req, res) => {
       success: true,
       message: "Task deleted successfully.",
     });
-
   } catch (error) {
-
     return res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 
 export const getMyTasks = async (req, res) => {
   try {
-
     const tasks = await Task.find({
       assignedTo: req.user._id,
       isDeleted: false,
@@ -444,20 +436,16 @@ export const getMyTasks = async (req, res) => {
       total: tasks.length,
       data: tasks,
     });
-
   } catch (error) {
-
     return res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 
 export const getUpcomingTasks = async (req, res) => {
   try {
-
     const today = new Date();
     today.setHours(23, 59, 59, 999);
 
@@ -485,20 +473,16 @@ export const getUpcomingTasks = async (req, res) => {
       total: tasks.length,
       data: tasks,
     });
-
   } catch (error) {
-
     return res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 
 export const getOverdueTasks = async (req, res) => {
   try {
-
     const today = new Date();
 
     const tasks = await Task.find({
@@ -520,20 +504,16 @@ export const getOverdueTasks = async (req, res) => {
       total: tasks.length,
       data: tasks,
     });
-
   } catch (error) {
-
     return res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 
 export const completeTask = async (req, res) => {
   try {
-
     const filter =
       req.user.role === "admin"
         ? {
@@ -565,13 +545,10 @@ export const completeTask = async (req, res) => {
       message: "Task completed successfully.",
       data: task,
     });
-
   } catch (error) {
-
     return res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };

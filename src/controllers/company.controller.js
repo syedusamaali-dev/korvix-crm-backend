@@ -1,5 +1,6 @@
 import Company from "../models/Company.js";
 import { validationResult } from "express-validator";
+import { logActivity } from "../utils/activityLogger.js";
 
 export const createCompany = async (req, res) => {
   try {
@@ -27,6 +28,15 @@ export const createCompany = async (req, res) => {
       ...req.body,
       owner: req.user._id,
     });
+
+    await logActivity({
+    action: "CREATE",
+    module: "company",
+    entityId: company._id,
+    entityCode: company.companyCode,
+    performedBy: req.user._id,
+    description: `Company ${company.companyName} created`,
+});
 
     res.status(201).json({
       success: true,

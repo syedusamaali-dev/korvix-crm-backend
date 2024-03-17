@@ -2,6 +2,8 @@ import Deal from "../models/Deal.js";
 import Lead from "../models/Lead.js";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
+import { logActivity } from "../utils/activityLogger.js";
+
 
 import { validationResult } from "express-validator";
 
@@ -76,7 +78,14 @@ export const createDeal = async (req, res) => {
     lead.converted = true;
     lead.convertedAt = new Date();
     lead.deal = deal._id;
-
+    await logActivity({
+      action: "CREATE",
+      module: "deal",
+      entityId: deal._id,
+      entityCode: deal.dealCode,
+      performedBy: req.user._id,
+      description: `Deal ${deal.title} created`,
+    });
     await lead.save();
 
     res.status(201).json({

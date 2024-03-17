@@ -1,0 +1,16 @@
+# Force the project to detect JavaScript/Node.js for backend
+*.js linguist-language=JavaScript
+
+# Ignore database dumps or lock files from stats
+*.json linguist-vendored
+*.lock linguist-vendored
+
+# Ignore build, logs, and environment folders
+logs/* linguist-vendored
+build/* linguist-vendored
+dist/* linguist-vendored
+.env* linguist-vendored
+
+# Ignore documentation folders from skewing code stats
+docs/* linguist-documentation
+README.md linguist-documentation
