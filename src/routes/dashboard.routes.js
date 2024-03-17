@@ -2,7 +2,7 @@ import express from "express";
 
 import { protect } from "../middlewares/auth.middleware.js ";
 
-import { getDashboardOverview , getLeadsByStatus , getDealsByStage,getMonthlyRevenue} from "../controllers/dashboard.controller.js";
+import { getDashboardOverview , getLeadsByStatus , getDealsByStage,getMonthlyRevenue, getMonthlyLeads} from "../controllers/dashboard.controller.js";
 
 const router = express.Router();
 
@@ -21,6 +21,12 @@ router.get(
   "/charts/monthly-revenue",
   protect,
   getMonthlyRevenue
+);
+
+router.get(
+  "/charts/monthly-leads",
+  protect,
+  getMonthlyLeads
 );
 
 export default router;
