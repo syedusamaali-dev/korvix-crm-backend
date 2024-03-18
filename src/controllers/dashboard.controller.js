@@ -349,3 +349,58 @@ export const getMonthlyLeads = async (req, res) => {
     });
   }
 };
+
+export const getMonthlyDeals = async (req, res) => {
+  try {
+
+    const filter =
+      req.user.role === "admin"
+        ? { isDeleted: false }
+        : {
+            owner: req.user._id,
+            isDeleted: false,
+          };
+
+    const result = await Deal.aggregate([
+      {
+        $match: filter,
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m",
+              date: "$createdAt",
+            },
+          },
+          total: {
+            $sum: 1,
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          month: "$_id",
+          total: 1,
+        },
+      },
+      {
+        $sort: {
+          month: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
