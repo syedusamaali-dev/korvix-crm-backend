@@ -454,3 +454,79 @@ export const getMyTasks = async (req, res) => {
 
   }
 };
+
+export const getUpcomingTasks = async (req, res) => {
+  try {
+
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    const nextWeek = new Date();
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    nextWeek.setHours(23, 59, 59, 999);
+
+    const tasks = await Task.find({
+      assignedTo: req.user._id,
+      isDeleted: false,
+      status: { $ne: "completed" },
+      dueDate: {
+        $gt: today,
+        $lte: nextWeek,
+      },
+    })
+      .populate("company", "companyName")
+      .populate("contact", "firstName lastName")
+      .populate("lead", "title")
+      .populate("deal", "title dealCode")
+      .sort({ dueDate: 1 });
+
+    return res.status(200).json({
+      success: true,
+      total: tasks.length,
+      data: tasks,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+export const getOverdueTasks = async (req, res) => {
+  try {
+
+    const today = new Date();
+
+    const tasks = await Task.find({
+      assignedTo: req.user._id,
+      isDeleted: false,
+      status: { $ne: "completed" },
+      dueDate: {
+        $lt: today,
+      },
+    })
+      .populate("company", "companyName")
+      .populate("contact", "firstName lastName")
+      .populate("lead", "title")
+      .populate("deal", "title dealCode")
+      .sort({ dueDate: 1 });
+
+    return res.status(200).json({
+      success: true,
+      total: tasks.length,
+      data: tasks,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
