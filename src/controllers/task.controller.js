@@ -381,3 +381,76 @@ export const updateTask = async (req, res) => {
     });
   }
 };
+
+export const deleteTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const filter =
+      req.user.role === "admin"
+        ? {
+            _id: id,
+            isDeleted: false,
+          }
+        : {
+            _id: id,
+            assignedTo: req.user._id,
+            isDeleted: false,
+          };
+
+    const task = await Task.findOne(filter);
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found.",
+      });
+    }
+
+    task.isDeleted = true;
+
+    await task.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Task deleted successfully.",
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+export const getMyTasks = async (req, res) => {
+  try {
+
+    const tasks = await Task.find({
+      assignedTo: req.user._id,
+      isDeleted: false,
+    })
+      .populate("company", "companyName")
+      .populate("contact", "firstName lastName")
+      .populate("lead", "title")
+      .populate("deal", "title dealCode")
+      .sort({ dueDate: 1 });
+
+    return res.status(200).json({
+      success: true,
+      total: tasks.length,
+      data: tasks,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};

@@ -1,11 +1,34 @@
 import express from "express";
+
+import {
+  createTask,
+  getTasks,
+  getTaskById,
+  updateTask,
+  deleteTask,
+  getMyTasks,
+} from "../controllers/task.controller.js";
+
 import { protect } from "../middlewares/auth.middleware.js";
-import { createTask, getTasks,getTaskById,updateTask } from "../controllers/task.controller.js";
 
 const router = express.Router();
 
+// Create
 router.post("/", protect, createTask);
+
+// Special routes FIRST
+router.get("/my", protect, getMyTasks);
+
+// General list
 router.get("/", protect, getTasks);
+
+// Dynamic route AFTER special routes
 router.get("/:id", protect, getTaskById);
+
+// Update
 router.put("/:id", protect, updateTask);
+
+// Delete
+router.delete("/:id", protect, deleteTask);
+
 export default router;
