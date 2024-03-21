@@ -201,3 +201,48 @@ export const getTasks = async (req, res) => {
     });
   }
 };
+export const getTaskById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const filter =
+      req.user.role === "admin"
+        ? {
+            _id: id,
+            isDeleted: false,
+          }
+        : {
+            _id: id,
+            assignedTo: req.user._id,
+            isDeleted: false,
+          };
+
+    const task = await Task.findOne(filter)
+      .populate("assignedTo", "firstName lastName email role")
+      .populate("createdBy", "firstName lastName email")
+      .populate("lead", "title leadCode status")
+      .populate("company", "companyName companyCode")
+      .populate("contact", "firstName lastName email phone contactCode")
+      .populate("deal", "title dealCode stage value");
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: task,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
