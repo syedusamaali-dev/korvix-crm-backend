@@ -8,7 +8,8 @@ import {
   deleteTask,
   getMyTasks,
   getUpcomingTasks,
-  getOverdueTasks
+  getOverdueTasks,
+    completeTask
 } from "../controllers/task.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
@@ -25,6 +26,7 @@ router.get("/my", protect, getMyTasks);
 router.get("/", protect, getTasks);
 router.get("/upcoming", protect, getUpcomingTasks);
 router.get("/overdue", protect, getOverdueTasks);
+router.patch("/:id/complete", protect, completeTask);
 // Dynamic route AFTER special routes
 router.get("/:id", protect, getTaskById);
 

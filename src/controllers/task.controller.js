@@ -530,3 +530,48 @@ export const getOverdueTasks = async (req, res) => {
 
   }
 };
+
+export const completeTask = async (req, res) => {
+  try {
+
+    const filter =
+      req.user.role === "admin"
+        ? {
+            _id: req.params.id,
+            isDeleted: false,
+          }
+        : {
+            _id: req.params.id,
+            assignedTo: req.user._id,
+            isDeleted: false,
+          };
+
+    const task = await Task.findOne(filter);
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found.",
+      });
+    }
+
+    task.status = "completed";
+    task.completedAt = new Date();
+
+    await task.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Task completed successfully.",
+      data: task,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
