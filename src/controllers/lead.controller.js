@@ -3,6 +3,8 @@ import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
 import { validationResult } from "express-validator";
 import { logActivity } from "../utils/activityLogger.js";
+import { createNotification } from "../utils/notificationLogger.js";
+
 
 export const createLead = async (req, res) => {
   try {
@@ -58,6 +60,14 @@ export const createLead = async (req, res) => {
     performedBy: req.user._id,
     description: `Lead ${lead.title} created`,
 });
+await createNotification({
+      recipient: assignedTo,
+      type: "task-assigned",
+      title: "New Task Assigned",
+      message: `You have been assigned the task "${task.title}".`,
+      module: "task",
+      entityId: task._id,
+    });
 
     res.status(201).json({
       success: true,

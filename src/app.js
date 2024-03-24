@@ -14,6 +14,8 @@ import dealRoutes from "./routes/deal.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import taskRoutes from "./routes/task.routes.js";
 import activityRoutes from "./routes/activity.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
+
 const app = express();
 
 app.use(cors());
@@ -33,6 +35,7 @@ app.use("/api/deals", dealRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/activities", activityRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(express.urlencoded({ extended: true }));
 

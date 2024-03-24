@@ -5,7 +5,7 @@ import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
 import Deal from "../models/Deal.js";
 import { logActivity } from "../utils/activityLogger.js";
-
+import {createNotification} from "../utils/notificationLogger.js";
 import {
   createTaskValidation,
   updateTaskValidation,
@@ -126,6 +126,14 @@ export const createTask = async (req, res) => {
       entityCode: task.taskCode,
       performedBy: req.user._id,
       description: `Task ${task.title} created`,
+    });
+    await createNotification({
+      recipient: assignedTo,
+      type: "task-assigned",
+      title: "New Task Assigned",
+      message: `You have been assigned the task "${task.title}".`,
+      module: "task",
+      entityId: task._id,
     });
     return res.status(201).json({
       success: true,

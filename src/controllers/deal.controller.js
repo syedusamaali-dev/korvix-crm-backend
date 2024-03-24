@@ -3,7 +3,7 @@ import Lead from "../models/Lead.js";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
 import { logActivity } from "../utils/activityLogger.js";
-
+import { createNotification } from "../utils/notificationLogger.js";
 
 import { validationResult } from "express-validator";
 
@@ -87,6 +87,14 @@ export const createDeal = async (req, res) => {
       description: `Deal ${deal.title} created`,
     });
     await lead.save();
+    await createNotification({
+          recipient: assignedTo,
+          type: "task-assigned",
+          title: "New Task Assigned",
+          message: `You have been assigned the task "${task.title}".`,
+          module: "task",
+          entityId: task._id,
+        });
 
     res.status(201).json({
       success: true,
