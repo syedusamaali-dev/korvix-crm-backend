@@ -5,7 +5,6 @@ import { validationResult } from "express-validator";
 import { logActivity } from "../utils/activityLogger.js";
 import { createNotification } from "../utils/notificationLogger.js";
 
-
 export const createLead = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -53,20 +52,20 @@ export const createLead = async (req, res) => {
     });
 
     await logActivity({
-    action: "CREATE",
-    module: "lead",
-    entityId: lead._id,
-    entityCode: lead.leadCode,
-    performedBy: req.user._id,
-    description: `Lead ${lead.title} created`,
-});
-await createNotification({
-      recipient: assignedTo,
-      type: "task-assigned",
-      title: "New Task Assigned",
-      message: `You have been assigned the task "${task.title}".`,
-      module: "task",
-      entityId: task._id,
+      action: "CREATE",
+      module: "lead",
+      entityId: lead._id,
+      entityCode: lead.leadCode,
+      performedBy: req.user._id,
+      description: `Lead ${lead.title} created`,
+    });
+    await createNotification({
+      recipient: lead.owner,
+      type: "lead-assigned",
+      title: "New Lead Assigned",
+      message: `Lead "${lead.title}" has been assigned to you.`,
+      module: "lead",
+      entityId: lead._id,
     });
 
     res.status(201).json({
@@ -74,7 +73,6 @@ await createNotification({
       message: "Lead created successfully.",
       data: lead,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -123,7 +121,6 @@ export const getLeads = async (req, res) => {
       pages: Math.ceil(total / limit),
       data: leads,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -159,7 +156,6 @@ export const getLeadById = async (req, res) => {
       success: true,
       data: lead,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -229,7 +225,6 @@ export const updateLead = async (req, res) => {
       message: "Lead updated successfully.",
       data: lead,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -267,7 +262,6 @@ export const deleteLead = async (req, res) => {
       success: true,
       message: "Lead deleted successfully.",
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,

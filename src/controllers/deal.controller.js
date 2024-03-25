@@ -9,6 +9,9 @@ import { validationResult } from "express-validator";
 
 export const createDeal = async (req, res) => {
   try {
+    // -----------------------------------
+    // 1. Validate request
+    // -----------------------------------
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -18,7 +21,9 @@ export const createDeal = async (req, res) => {
       });
     }
 
-    // Check Lead
+    // -----------------------------------
+    // 2. Check Lead
+    // -----------------------------------
     const lead = await Lead.findById(req.body.lead);
 
     if (!lead || lead.isDeleted) {
@@ -27,6 +32,8 @@ export const createDeal = async (req, res) => {
         message: "Lead not found.",
       });
     }
+
+    // Prevent duplicate conversion
     if (lead.converted) {
       return res.status(400).json({
         success: false,
@@ -34,7 +41,7 @@ export const createDeal = async (req, res) => {
       });
     }
 
-    // Business Rule
+    // Only Won leads can become Deals
     if (lead.status !== "won") {
       return res.status(400).json({
         success: false,
@@ -42,7 +49,9 @@ export const createDeal = async (req, res) => {
       });
     }
 
-    // Check Company
+    // -----------------------------------
+    // 3. Check Company
+    // -----------------------------------
     const company = await Company.findById(req.body.company);
 
     if (!company || company.isDeleted) {
@@ -52,7 +61,9 @@ export const createDeal = async (req, res) => {
       });
     }
 
-    // Check Contact
+    // -----------------------------------
+    // 4. Check Contact
+    // -----------------------------------
     if (req.body.contact) {
       const contact = await Contact.findById(req.body.contact);
 
@@ -63,6 +74,7 @@ export const createDeal = async (req, res) => {
         });
       }
 
+      // Contact must belong to selected company
       if (contact.company.toString() !== company._id.toString()) {
         return res.status(400).json({
           success: false,
@@ -71,13 +83,26 @@ export const createDeal = async (req, res) => {
       }
     }
 
+    // -----------------------------------
+    // 5. Create Deal
+    // -----------------------------------
     const deal = await Deal.create({
       ...req.body,
       owner: req.user._id,
     });
+
+    // -----------------------------------
+    // 6. Convert Lead
+    // -----------------------------------
     lead.converted = true;
     lead.convertedAt = new Date();
     lead.deal = deal._id;
+
+    await lead.save();
+
+    // -----------------------------------
+    // 7. Log Deal Activity
+    // -----------------------------------
     await logActivity({
       action: "CREATE",
       module: "deal",
@@ -86,23 +111,48 @@ export const createDeal = async (req, res) => {
       performedBy: req.user._id,
       description: `Deal ${deal.title} created`,
     });
-    await lead.save();
-    await createNotification({
-          recipient: assignedTo,
-          type: "task-assigned",
-          title: "New Task Assigned",
-          message: `You have been assigned the task "${task.title}".`,
-          module: "task",
-          entityId: task._id,
-        });
 
-    res.status(201).json({
+    // -----------------------------------
+    // 8. Log Lead Conversion Activity
+    // -----------------------------------
+    await logActivity({
+      action: "CONVERT",
+      module: "lead",
+      entityId: lead._id,
+      entityCode: lead.leadCode,
+      performedBy: req.user._id,
+      description: `Lead ${lead.title} converted into Deal ${deal.dealCode}`,
+      metadata: {
+        dealId: deal._id,
+        dealCode: deal.dealCode,
+      },
+    });
+
+    // -----------------------------------
+    // 9. Notify Lead Owner
+    // -----------------------------------
+    if (lead.owner) {
+      await createNotification({
+        recipient: lead.owner,
+        type: "lead-converted",
+        title: "Lead Converted",
+        message: `Lead "${lead.title}" has been converted into deal "${deal.title}".`,
+        module: "lead",
+        entityId: lead._id,
+      });
+    }
+
+    // -----------------------------------
+    // 10. Response
+    // -----------------------------------
+    return res.status(201).json({
       success: true,
       message: "Deal created successfully.",
       data: deal,
     });
+
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
