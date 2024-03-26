@@ -247,69 +247,82 @@ export const getDealById = async (req, res) => {
 
 export const updateDeal = async (req, res) => {
   try {
-    const deal = await Deal.findById(req.params.id);
+    const errors = validationResult(req);
 
-    if (!deal || deal.isDeleted) {
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array(),
+      });
+    }
+
+    // Find existing deal
+    const deal = await Deal.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
+
+    if (!deal) {
       return res.status(404).json({
         success: false,
         message: "Deal not found.",
       });
     }
 
-    if (
-      req.user.role !== "admin" &&
-      deal.owner.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied.",
-      });
-    }
+    // Save old stage before updating
+    const oldStage = deal.stage;
 
-    // Validate Company
-    if (req.body.company) {
-      const company = await Company.findById(req.body.company);
-
-      if (!company || company.isDeleted) {
-        return res.status(404).json({
-          success: false,
-          message: "Company not found.",
-        });
-      }
-    }
-
-    // Validate Contact
-    if (req.body.contact) {
-      const contact = await Contact.findById(req.body.contact);
-
-      if (!contact || contact.isDeleted) {
-        return res.status(404).json({
-          success: false,
-          message: "Contact not found.",
-        });
-      }
-
-      const companyId = req.body.company || deal.company;
-
-      if (contact.company.toString() !== companyId.toString()) {
-        return res.status(400).json({
-          success: false,
-          message: "Contact does not belong to the selected company.",
-        });
-      }
-    }
-
+    // Update deal
     Object.assign(deal, req.body);
 
     await deal.save();
 
-    res.status(200).json({
+    // Check if stage changed
+    if (req.body.stage && req.body.stage !== oldStage) {
+      const newStage = deal.stage;
+
+      // Log activity
+      await logActivity({
+        action: "UPDATE",
+        module: "deal",
+        entityId: deal._id,
+        entityCode: deal.dealCode,
+        performedBy: req.user._id,
+        description: `Deal ${deal.title} moved from ${oldStage} to ${newStage}`,
+        metadata: {
+          oldStage,
+          newStage,
+        },
+      });
+
+      // Create notification for deal owner
+      if (deal.owner) {
+        await createNotification({
+          recipient: deal.owner,
+          type: "deal-stage-changed",
+          title: "Deal Stage Updated",
+          message: `Deal "${deal.title}" moved from ${oldStage} to ${newStage}.`,
+          module: "deal",
+          entityId: deal._id,
+        });
+      }
+    }
+
+    // Get populated updated deal
+    const populatedDeal = await Deal.findById(deal._id)
+      .populate("lead", "title leadCode")
+      .populate("company", "companyName")
+      .populate("contact", "firstName lastName")
+      .populate("owner", "firstName lastName email");
+
+    return res.status(200).json({
       success: true,
       message: "Deal updated successfully.",
-      data: deal,
+      data: populatedDeal,
     });
+
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
