@@ -27,11 +27,14 @@ io.use(socketAuth);
 // Socket connection
 io.on("connection", (socket) => {
   console.log("🔌 Socket connected:", socket.id);
-  console.log(
-    "👤 User:",
-    socket.user.firstName,
-    socket.user.lastName
-  );
+  console.log("👤 User:", socket.user.firstName, socket.user.lastName);
+
+  // Join user's private room
+  const userRoom = `user:${socket.user._id}`;
+
+  socket.join(userRoom);
+
+  console.log(`🏠 User joined room: ${userRoom}`);
 
   socket.on("disconnect", () => {
     console.log("🔌 Socket disconnected:", socket.id);
