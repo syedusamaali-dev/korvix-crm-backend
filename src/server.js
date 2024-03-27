@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 
 import app from "./app.js";
 import connectDB from "./config/database.js";
+import { socketAuth } from "./middleware/socketAuth.middleware.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -21,6 +22,10 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
+// Socket authentication
+io.use(socketAuth);
+
 
 // Socket connection
 io.on("connection", (socket) => {
