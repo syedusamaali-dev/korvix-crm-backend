@@ -1,4 +1,5 @@
 import Notification from "../models/Notification.js";
+import { emitToUser } from "./socket.js";
 
 export const createNotification = async ({
   recipient,
@@ -16,4 +17,8 @@ export const createNotification = async ({
     module,
     entityId,
   });
+  // Send notification in real time
+  emitToUser(recipient.toString(), "notification:new", notification);
+
+  return notification;
 };

@@ -7,7 +7,7 @@ import { Server } from "socket.io";
 import app from "./app.js";
 import connectDB from "./config/database.js";
 import { socketAuth } from "./middleware/socketAuth.middleware.js";
-
+import { initializeSocket } from "./utils/socket.js";
 const PORT = process.env.PORT || 5000;
 
 await connectDB();
@@ -20,7 +20,7 @@ const io = new Server(server, {
     credentials: true,
   },
 });
-
+initializeSocket(io);
 // Socket authentication
 io.use(socketAuth);
 
