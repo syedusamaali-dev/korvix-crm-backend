@@ -9,7 +9,8 @@ export const createNotification = async ({
   module,
   entityId,
 }) => {
-  return await Notification.create({
+
+  const notification = await Notification.create({
     recipient,
     type,
     title,
@@ -17,8 +18,21 @@ export const createNotification = async ({
     module,
     entityId,
   });
-  // Send notification in real time
-  emitToUser(recipient.toString(), "notification:new", notification);
+
+  console.log("🔔 Notification created:", notification._id);
+
+  console.log(
+    "📡 Emitting notification to:",
+    `user:${recipient.toString()}`
+  );
+
+  emitToUser(
+    recipient.toString(),
+    "notification:new",
+    notification
+  );
+
+  console.log("✅ Notification emitted");
 
   return notification;
 };
