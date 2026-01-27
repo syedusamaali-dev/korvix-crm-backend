@@ -34,17 +34,22 @@ const options = {
     },
   },
 
- apis: [
-  path.join(__dirname, "../routes/auth.routes.js"),
-  path.join(__dirname, "../routes/activity.routes.js"),
-],
+  apis: [
+    path.join(__dirname, "../routes/auth.routes.js"),
+    path.join(__dirname, "../routes/activity.routes.js"),
+    path.join(__dirname, "../routes/company.routes.js"),
+    path.join(__dirname, "../routes/contact.routes.js"),
+    path.join(__dirname, "../routes/customer.routes.js"),
+    path.join(__dirname, "../routes/dashboard.routes.js"),
+    path.join(__dirname, "../routes/deal.routes.js"),
+    path.join(__dirname, "../routes/lead.routes.js"),
+    path.join(__dirname, "../routes/notification.routes.js"),
+    path.join(__dirname, "../routes/task.routes.js"),
+  ],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
 
-console.log(
-  "Swagger paths:",
-  Object.keys(swaggerSpec.paths || {})
-);
+console.log("Swagger paths:", Object.keys(swaggerSpec.paths || {}));
 
 export default swaggerSpec;
