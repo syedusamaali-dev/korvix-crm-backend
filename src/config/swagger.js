@@ -1,9 +1,22 @@
 import swaggerJsdoc from "swagger-jsdoc";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const routesPath = path.join(__dirname, "../routes");
+
+console.log("🔥 SWAGGER CONFIG LOADED");
+console.log("📁 Routes folder:", routesPath);
+
+const routeFiles = fs
+  .readdirSync(routesPath)
+  .filter((file) => file.endsWith(".js"))
+  .map((file) => path.join(routesPath, file));
+
+console.log("📄 Route files:", routeFiles);
 
 const options = {
   definition: {
@@ -34,22 +47,14 @@ const options = {
     },
   },
 
-  apis: [
-    path.join(__dirname, "../routes/auth.routes.js"),
-    path.join(__dirname, "../routes/activity.routes.js"),
-    path.join(__dirname, "../routes/company.routes.js"),
-    path.join(__dirname, "../routes/contact.routes.js"),
-    path.join(__dirname, "../routes/customer.routes.js"),
-    path.join(__dirname, "../routes/dashboard.routes.js"),
-    path.join(__dirname, "../routes/deal.routes.js"),
-    path.join(__dirname, "../routes/lead.routes.js"),
-    path.join(__dirname, "../routes/notification.routes.js"),
-    path.join(__dirname, "../routes/task.routes.js"),
-  ],
+  apis: routeFiles,
 };
 
 const swaggerSpec = swaggerJsdoc(options);
 
-console.log("Swagger paths:", Object.keys(swaggerSpec.paths || {}));
+console.log(
+  "📚 Swagger paths:",
+  Object.keys(swaggerSpec.paths || {})
+);
 
 export default swaggerSpec;
