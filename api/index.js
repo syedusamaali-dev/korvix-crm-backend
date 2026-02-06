@@ -1,5 +1,5 @@
-import app from "../app.js";
-import connectDB from "../config/database.js";
+import app from "../src/app.js";
+import connectDB from "../src/config/database.js";
 
 export default async function handler(req, res) {
   // 1. Ensure DB connects on serverless requests
