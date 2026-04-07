@@ -19,6 +19,20 @@ import notificationRoutes from "./routes/notification.routes.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./config/swagger.js";
 const app = express();
+const allowedOrigins = [
+  "http://localhost:4200",
+  "http://korvix-crm-2-0.vercel.app",
+  "https://korvix-crm-2-0.vercel.app",
+];
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Origin not allowed by CORS"));
+  },
+  credentials: true,
+};
 // Options to load Swagger UI CSS/JS from CDN for Vercel compatibility
 const swaggerOptions = {
   customCssUrl:
@@ -30,7 +44,7 @@ const swaggerOptions = {
 };
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
 
-app.use(cors());
+app.use(cors(corsOptions));
 
 app.use(helmet());
 

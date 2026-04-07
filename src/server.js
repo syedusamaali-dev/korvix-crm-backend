@@ -9,6 +9,11 @@ import connectDB from "./config/database.js";
 import { socketAuth } from "./middlewares/socketAuth.middleware.js";
 import { initializeSocket } from "./utils/socket.js";
 const PORT = process.env.PORT || 5000;
+const allowedOrigins = [
+  "http://localhost:4200",
+  "http://korvix-crm-2-0.vercel.app",
+  "https://korvix-crm-2-0.vercel.app",
+];
 
 await connectDB();
 
@@ -16,7 +21,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:4200",
+    origin: allowedOrigins,
     credentials: true,
   },
 });
