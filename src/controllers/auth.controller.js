@@ -4,8 +4,16 @@ import generateToken from "../utils/generateToken.js";
 export const register = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
 
-    const userExists = await User.findOne({ email });
+    if (!firstName?.trim() || !lastName?.trim() || !normalizedEmail || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "First name, last name, email, and password are required.",
+      });
+    }
+
+    const userExists = await User.findOne({ email: normalizedEmail });
 
     if (userExists) {
       return res.status(400).json({
@@ -17,7 +25,7 @@ export const register = async (req, res) => {
     const user = await User.create({
       firstName,
       lastName,
-      email,
+      email: normalizedEmail,
       password,
     });
 
@@ -42,10 +50,16 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("Email:", email);
-    console.log("Password:", password);
-    const user = await User.findOne({ email }).select("+password");
-    console.log(user);
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required.",
+      });
+    }
+
+    const user = await User.findOne({ email: normalizedEmail }).select("+password");
     if (!user) {
       return res.status(401).json({
         success: false,
