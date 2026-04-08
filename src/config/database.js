@@ -8,8 +8,16 @@ const connectDB = async () => {
     return;
   }
 
+  const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+
+  if (!mongoUri) {
+    throw new Error(
+      'Database connection failed: set MONGO_URI (or MONGODB_URI) in the deployment environment.'
+    );
+  }
+
   try {
-    const connection = await mongoose.connect(process.env.MONGO_URI, {
+    const connection = await mongoose.connect(mongoUri, {
       // Prevents buffer build-ups if connection drops temporarily
       bufferCommands: false,
     });
