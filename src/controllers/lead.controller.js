@@ -2,6 +2,7 @@ import Lead from "../models/Lead.js";
 import Company from "../models/Company.js";
 import Contact from "../models/Contact.js";
 import { validationResult } from "express-validator";
+import { logActivity } from "../utils/activityLogger.js";
 
 export const createLead = async (req, res) => {
   try {
@@ -48,6 +49,15 @@ export const createLead = async (req, res) => {
       ...req.body,
       owner: req.user._id,
     });
+
+    await logActivity({
+    action: "CREATE",
+    module: "lead",
+    entityId: lead._id,
+    entityCode: lead.leadCode,
+    performedBy: req.user._id,
+    description: `Lead ${lead.title} created`,
+});
 
     res.status(201).json({
       success: true,

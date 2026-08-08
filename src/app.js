@@ -1,9 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import cookieParser from 'cookie-parser';
-import morgan from 'morgan';
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import compression from "compression";
+import cookieParser from "cookie-parser";
+import morgan from "morgan";
 import authRoutes from "./routes/auth.routes.js";
 import customerRoutes from "./routes/customer.routes.js";
 import companyRoutes from "./routes/company.routes.js";
@@ -12,6 +12,8 @@ import leadRoutes from "./routes/lead.routes.js";
 
 import dealRoutes from "./routes/deal.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import taskRoutes from "./routes/task.routes.js";
+import activityRoutes from "./routes/activity.routes.js";
 const app = express();
 
 app.use(cors());
@@ -29,18 +31,20 @@ app.use("/api/leads", leadRoutes);
 app.use("/api/deals", dealRoutes);
 
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/activities", activityRoutes);
 
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cookieParser());
 
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 
-app.get('/', (req, res) => {
-    res.json({
-        success: true,
-        message: 'Welcome to Korvix CRM API'
-    });
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "Welcome to Korvix CRM API",
+  });
 });
 
 export default app;

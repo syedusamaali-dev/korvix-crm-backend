@@ -1,5 +1,6 @@
 import Customer from "../models/Customer.js";
 import { validationResult } from "express-validator";
+import { logActivity } from "../utils/activityLogger.js";
 
 export const createCustomer = async (req, res) => {
   try {
@@ -65,6 +66,14 @@ export const createCustomer = async (req, res) => {
       tags,
       owner: req.user._id,
     });
+    await logActivity({
+    action: "CREATE",
+    module: "customer",
+    entityId: customer._id,
+    entityCode: customer.customerCode,
+    performedBy: req.user._id,
+    description: `Customer ${customer.firstName} ${customer.lastName} created`,
+});
 
     res.status(201).json({
       success: true,

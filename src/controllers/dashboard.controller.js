@@ -293,3 +293,216 @@ export const getMonthlyRevenue = async (req, res) => {
     });
   }
 };
+
+
+export const getMonthlyLeads = async (req, res) => {
+  try {
+
+    const filter =
+      req.user.role === "admin"
+        ? { isDeleted: false }
+        : {
+            owner: req.user._id,
+            isDeleted: false,
+          };
+
+    const result = await Lead.aggregate([
+      {
+        $match: filter,
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m",
+              date: "$createdAt",
+            },
+          },
+          total: {
+            $sum: 1,
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          month: "$_id",
+          total: 1,
+        },
+      },
+      {
+        $sort: {
+          month: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getMonthlyDeals = async (req, res) => {
+  try {
+
+    const filter =
+      req.user.role === "admin"
+        ? { isDeleted: false }
+        : {
+            owner: req.user._id,
+            isDeleted: false,
+          };
+
+    const result = await Deal.aggregate([
+      {
+        $match: filter,
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m",
+              date: "$createdAt",
+            },
+          },
+          total: {
+            $sum: 1,
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          month: "$_id",
+          total: 1,
+        },
+      },
+      {
+        $sort: {
+          month: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getRecentActivity = async (req, res) => {
+  try {
+
+    const filter =
+      req.user.role === "admin"
+        ? { isDeleted: false }
+        : {
+            owner: req.user._id,
+            isDeleted: false,
+          };
+
+    const [customers, companies, contacts, leads, deals] =
+      await Promise.all([
+        Customer.find(filter)
+          .sort({ createdAt: -1 })
+          .limit(5),
+
+        Company.find(filter)
+          .sort({ createdAt: -1 })
+          .limit(5),
+
+        Contact.find(filter)
+          .sort({ createdAt: -1 })
+          .limit(5),
+
+        Lead.find(filter)
+          .sort({ createdAt: -1 })
+          .limit(5),
+
+        Deal.find(filter)
+          .sort({ createdAt: -1 })
+          .limit(5),
+      ]);
+
+    let activities = [];
+
+    customers.forEach(item => {
+      activities.push({
+        type: "Customer",
+        action: "Created",
+        title: `${item.firstName} ${item.lastName}`,
+        createdAt: item.createdAt,
+      });
+    });
+
+    companies.forEach(item => {
+      activities.push({
+        type: "Company",
+        action: "Created",
+        title: item.companyName,
+        createdAt: item.createdAt,
+      });
+    });
+
+    contacts.forEach(item => {
+      activities.push({
+        type: "Contact",
+        action: "Created",
+        title: `${item.firstName} ${item.lastName}`,
+        createdAt: item.createdAt,
+      });
+    });
+
+    leads.forEach(item => {
+      activities.push({
+        type: "Lead",
+        action: "Created",
+        title: item.title,
+        createdAt: item.createdAt,
+      });
+    });
+
+    deals.forEach(item => {
+      activities.push({
+        type: "Deal",
+        action: "Created",
+        title: item.title,
+        createdAt: item.createdAt,
+      });
+    });
+
+    activities.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    activities = activities.slice(0, 15);
+
+    res.status(200).json({
+      success: true,
+      data: activities,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
