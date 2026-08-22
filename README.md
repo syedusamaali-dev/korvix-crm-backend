@@ -20,7 +20,9 @@ A scalable, enterprise-grade Customer Relationship Management (CRM) platform foc
 
 </div>
 
----
+| | |
+| :--- | :--- |
+| **⭐ Backend Live** | https://korvix-crm-backend.vercel.app/ |
 
 # 📸 Project Preview
 
